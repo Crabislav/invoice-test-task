@@ -1,13 +1,16 @@
 package handler;
 
+import domain.InvoiceTotal;
 import domain.Package;
-import domain.*;
-import lombok.NonNull;
+import domain.PriceList;
+import domain.Usage;
 import list.ServiceList;
+import lombok.NonNull;
 
 import java.util.List;
 
-import static domain.constant.ServiceName.*;
+import static domain.constant.ServiceName.MINUTES;
+import static domain.constant.ServiceName.SMS;
 
 public class InvoiceHandler {
 
@@ -17,22 +20,16 @@ public class InvoiceHandler {
                                               @NonNull Package aPackage) {
         //sms
         long smsServiceId = ServiceList.services.get(SMS).getId();
-        long totalSmsUsedAmount = usage.stream()
-                .filter(aUsage -> smsServiceId == aUsage.getServiceId())
-                .map(Usage::getUsedAmount)
-                .mapToLong(Long::longValue)
-                .sum();
+        long totalSmsUsedAmount = getTotalAmountUsed(usage, smsServiceId);
         long extraSms = getExtraUnitUsage(totalSmsUsedAmount, aPackage.getAvailableSms());
+
         double priceForSms = getUsedUnitsPrice(extraSms, priceList.getServicePrices().get(SMS));
 
         //minutes
         long minutesServiceId = ServiceList.services.get(MINUTES).getId();
-        long totalMinutesUsedAmount = usage.stream()
-                .filter(aUsage -> minutesServiceId == aUsage.getServiceId())
-                .map(Usage::getUsedAmount)
-                .mapToLong(Long::longValue)
-                .sum();
+        long totalMinutesUsedAmount = getTotalAmountUsed(usage, minutesServiceId);
         long extraMinutes = getExtraUnitUsage(totalMinutesUsedAmount, aPackage.getAvailableMinutes());
+
         double priceForMinutes = getUsedUnitsPrice(extraMinutes, priceList.getServicePrices().get(MINUTES));
 
         //total price
@@ -48,7 +45,15 @@ public class InvoiceHandler {
         return invoiceTotal;
     }
 
-    private long getExtraUnitUsage(long totalUsedAmount, long availableAmount){
+    private long getTotalAmountUsed(@NonNull List<Usage> usage, long minutesServiceId) {
+        return usage.stream()
+                .filter(aUsage -> minutesServiceId == aUsage.getServiceId())
+                .map(Usage::getUsedAmount)
+                .mapToLong(Long::longValue)
+                .sum();
+    }
+
+    private long getExtraUnitUsage(long totalUsedAmount, long availableAmount) {
         return totalUsedAmount - availableAmount;
     }
 

@@ -1,10 +1,10 @@
 package handler;
 
+import availableData.AvailableServices;
 import domain.InvoiceTotal;
 import domain.Package;
 import domain.PriceList;
 import domain.Usage;
-import list.ServiceList;
 import lombok.NonNull;
 
 import java.util.List;
@@ -14,23 +14,26 @@ import static domain.constant.ServiceName.SMS;
 
 public class InvoiceHandler {
 
-    //probably it need an extra input like client id
+
+    //about task: probably it needs an extra inputs like client id
     public InvoiceTotal calculateInvoiceTotal(@NonNull List<Usage> usage,
                                               @NonNull PriceList priceList,
                                               @NonNull Package aPackage) {
         //sms
-        long smsServiceId = ServiceList.services.get(SMS).getId();
-        long totalSmsUsedAmount = getTotalAmountUsed(usage, smsServiceId);
-        long extraSms = getExtraUnitUsage(totalSmsUsedAmount, aPackage.getAvailableSms());
-
-        double priceForSms = getUsedUnitsPrice(extraSms, priceList.getServicePrices().get(SMS));
+        long extraSms = getExtraServiceUsage(
+                usage,
+                AvailableServices.services.get(SMS).getId(),
+                aPackage.getAvailableSms()
+        );
+        double priceForSms = getServicePrice(extraSms, priceList.getServicePrices().get(SMS));
 
         //minutes
-        long minutesServiceId = ServiceList.services.get(MINUTES).getId();
-        long totalMinutesUsedAmount = getTotalAmountUsed(usage, minutesServiceId);
-        long extraMinutes = getExtraUnitUsage(totalMinutesUsedAmount, aPackage.getAvailableMinutes());
-
-        double priceForMinutes = getUsedUnitsPrice(extraMinutes, priceList.getServicePrices().get(MINUTES));
+        long extraMinutes = getExtraServiceUsage(
+                usage,
+                AvailableServices.services.get(MINUTES).getId(),
+                aPackage.getAvailableMinutes()
+        );
+        double priceForMinutes = getServicePrice(extraMinutes, priceList.getServicePrices().get(MINUTES));
 
         //total price
         double totalPrice = getTotalPrice(
@@ -45,15 +48,13 @@ public class InvoiceHandler {
         return invoiceTotal;
     }
 
-    private long getTotalAmountUsed(@NonNull List<Usage> usage, long minutesServiceId) {
-        return usage.stream()
-                .filter(aUsage -> minutesServiceId == aUsage.getServiceId())
+    private long getExtraServiceUsage(@NonNull List<Usage> usage, long serviceId, long availableAmount) {
+        long totalUsedAmount = usage.stream()
+                .filter(aUsage -> serviceId == aUsage.getServiceId())
                 .map(Usage::getUsedAmount)
                 .mapToLong(Long::longValue)
                 .sum();
-    }
 
-    private long getExtraUnitUsage(long totalUsedAmount, long availableAmount) {
         return totalUsedAmount - availableAmount;
     }
 
@@ -61,7 +62,7 @@ public class InvoiceHandler {
         return packagePrice + minutesPrice + smsPrice;
     }
 
-    private double getUsedUnitsPrice(long extraUsageAmount, double unitPrice) {
+    private double getServicePrice(long extraUsageAmount, double unitPrice) {
         return extraUsageAmount < 0
                 ? 0.0d
                 : extraUsageAmount * unitPrice;

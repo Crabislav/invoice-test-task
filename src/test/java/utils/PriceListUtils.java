@@ -2,8 +2,8 @@ package utils;
 
 import domain.constant.PackageName;
 import domain.constant.ServiceName;
-import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,19 +14,19 @@ public class PriceListUtils {
     private PriceListUtils() {
     }
 
-    public static Map<ServiceName, Double> getServicePrices() {
-        Map<ServiceName, Double> price = new HashMap<>();
-        price.put(ServiceName.SMS, 0.3d);
-        price.put(ServiceName.MINUTES, 0.2d);
+    public static Map<ServiceName, BigDecimal> getServicePrices() {
+        Map<ServiceName, BigDecimal> price = new HashMap<>();
+        price.put(ServiceName.SMS, new BigDecimal("0.3"));
+        price.put(ServiceName.MINUTES, new BigDecimal("0.2"));
 
         return price;
     }
 
-    public static Map<PackageName, Double> getPackagePrices() {
-        Map<PackageName, Double> packagePrices = new HashMap<>();
-        packagePrices.put(PACKAGE_S, 5.0d);
-        packagePrices.put(PACKAGE_M, 10.0d);
-        packagePrices.put(PACKAGE_L, 20.0d);
+    public static Map<PackageName, BigDecimal> getPackagePrices() {
+        Map<PackageName, BigDecimal > packagePrices = new HashMap<>();
+        packagePrices.put(PACKAGE_S, new BigDecimal("5"));
+        packagePrices.put(PACKAGE_M, BigDecimal.TEN);
+        packagePrices.put(PACKAGE_L, new BigDecimal("20"));
 
         return packagePrices;
     }

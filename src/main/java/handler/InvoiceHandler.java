@@ -7,6 +7,8 @@ import domain.PriceList;
 import domain.Usage;
 import lombok.NonNull;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static domain.constant.ServiceName.MINUTES;
@@ -25,7 +27,7 @@ public class InvoiceHandler {
                 AvailableServices.services.get(SMS).getId(),
                 aPackage.getAvailableSms()
         );
-        double priceForSms = getServicePrice(extraSms, priceList.getServicePrices().get(SMS));
+        BigDecimal priceForSms = getServicePrice(extraSms, priceList.getServicePrices().get(SMS));
 
         //minutes
         long extraMinutes = getExtraServiceUsage(
@@ -33,10 +35,10 @@ public class InvoiceHandler {
                 AvailableServices.services.get(MINUTES).getId(),
                 aPackage.getAvailableMinutes()
         );
-        double priceForMinutes = getServicePrice(extraMinutes, priceList.getServicePrices().get(MINUTES));
+        BigDecimal priceForMinutes = getServicePrice(extraMinutes, priceList.getServicePrices().get(MINUTES));
 
         //total price
-        double totalPrice = getTotalPrice(
+        BigDecimal totalPrice = getTotalPrice(
                 priceList.getPackagePrices().get(aPackage.getName()),
                 priceForSms,
                 priceForMinutes
@@ -58,14 +60,13 @@ public class InvoiceHandler {
         return totalUsedAmount - availableAmount;
     }
 
-    private double getTotalPrice(double packagePrice, double smsPrice, double minutesPrice) {
-        return packagePrice + minutesPrice + smsPrice;
+    private BigDecimal getTotalPrice(BigDecimal packagePrice, BigDecimal smsPrice, BigDecimal minutesPrice) {
+        return packagePrice.add(smsPrice).add(minutesPrice);
     }
 
-    private double getServicePrice(long extraUsageAmount, double unitPrice) {
+    private BigDecimal getServicePrice(long extraUsageAmount, BigDecimal servicePrice) {
         return extraUsageAmount < 0
-                ? 0.0d
-                : extraUsageAmount * unitPrice;
+                ? BigDecimal.ZERO
+                : servicePrice.multiply(new BigDecimal(String.valueOf(extraUsageAmount))).setScale(1, RoundingMode.UP);
     }
-
 }
